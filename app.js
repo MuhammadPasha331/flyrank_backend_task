@@ -65,4 +65,72 @@ const id = tasks.length === 0 ? 1 : Math.max(...tasks.map(task => task.id)) + 1;
   res.status(201).json(newTask);
 });
 
+//stage 4
+
+app.put("/tasks/:id", (req, res) => {
+  const id = Number(req.params.id);
+  const task = tasks.find((task) => task.id === id);
+
+  if (!task) {
+    return res.status(404).json({
+      error: `Task ${req.params.id} not found`,
+    });
+  }
+
+  const body = req.body;
+
+  // Require a non-empty JSON object
+  if (
+    body === null ||
+    typeof body !== "object" ||
+    Array.isArray(body) ||
+    Object.keys(body).length === 0
+  ) {
+    return res.status(400).json({
+      error: "Provide a non-empty JSON object",
+    });
+  }
+
+  // Only allow title and done
+  const allowedFields = ["title", "done"];
+  const invalidField = Object.keys(body).some(
+    (key) => !allowedFields.includes(key)
+  );
+
+  if (invalidField) {
+    return res.status(400).json({
+      error: "Only title and done fields are allowed",
+    });
+  }
+
+  if (
+    "title" in body &&
+    (typeof body.title !== "string" ||
+      body.title.trim() === "")
+  ) {
+    return res.status(400).json({
+      error: "Title must be a non-empty string",
+    });
+  }
+
+  if ("done" in body && typeof body.done !== "boolean") {
+    return res.status(400).json({
+      error: "Done must be a boolean",
+    });
+  }
+
+  // Apply only the fields supplied by the client
+  if ("title" in body) {
+    task.title = body.title.trim();
+  }
+
+  if ("done" in body) {
+    task.done = body.done;
+  }
+
+  res.status(200).json(task);
+});
+
+
+
 app.listen(port,()=>{console.log(`app is running on port ${port}`);});
